@@ -1,0 +1,28 @@
+---
+- name: Collect Logs from Control Node
+  hosts: servers
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - name: Create a directory to store logs
+      ansible.builtin.file:
+        path: "~/Documents"
+        state: directory
+      become: true
+    - name: Allow user to run rsync without password and TTY
+      ansible.builtin.lineinfile:
+        dest: /etc/sudoers.d/ansible-rsync
+        line: "{{ ansible_user }} ALL=(ALL) NOPASSWD: /usr/bin/rsync"
+        create: yes
+    - name: Copy logs from Control Node to Manage Node
+      ansible.builtin.synchronize:
+        src: "/var/log"
+        dest: "~/Documents"
+        mode: pull
+      become: true
+
+    - name: Verify logs are copied successfully
+      ansible.builtin.debug:
+        msg: "Logs are successfully copied from Control Node to Manage Node."
+
